@@ -1,0 +1,61 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": {
+      "value": "westus3"
+    },
+    "environment": {
+      "value": "dev"
+    },
+    "namePrefix": {
+      "value": "zavastore"
+    },
+    "managedIdentityName": {
+      "value": "zavastore-dev-mi"
+    },
+    "acrName": {
+      "value": ""
+    },
+    "appServicePlanName": {
+      "value": "asp-zavastore-dev"
+    },
+    "webAppName": {
+      "value": "web-zavastore-dev"
+    },
+    "logAnalyticsWorkspaceName": {
+      "value": "law-zavastore-dev"
+    },
+    "appInsightsName": {
+      "value": "ai-zavastore-dev"
+    },
+    "aiServicesName": {
+      "value": "ais-zavastore-dev"
+    },
+    "resourceGroupName": {
+      "value": "rg-zavastore-dev-westus3"
+    },
+    "acrSku": {
+      "value": "Premium"
+    },
+    "appServiceSkuName": {
+      "value": "B1"
+    },
+    "appServiceSkuTier": {
+      "value": "Basic"
+    },
+    "containerImage": {
+      "value": "zavastore:latest"
+    },
+    "aiServicesSku": {
+      "value": "S0"
+    },
+    "tags": {
+      "value": {
+        "project": "ZavaStorefront",
+        "environment": "dev",
+        "source": "bicep"
+      }
+    }
+  }
+}

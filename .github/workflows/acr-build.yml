@@ -1,0 +1,39 @@
+name: Build and Push to ACR
+
+on:
+  push:
+    branches:
+      - dev
+      - main
+    paths:
+      - 'src/**'
+      - '.github/workflows/acr-build.yml'
+  workflow_dispatch:
+
+env:
+  REGISTRY_LOGIN_SERVER: zavastoredevacr.azurecr.io
+  IMAGE_NAME: zavastore
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Build and push image to ACR
+        run: |
+          az acr build \
+            --registry zavastoredevacr \
+            --image ${{ env.IMAGE_NAME }}:${{ github.sha }} \
+            --image ${{ env.IMAGE_NAME }}:latest \
+            --file ./src/Dockerfile \
+            ./src
+
+      - name: Azure Logout
+        run: az logout
