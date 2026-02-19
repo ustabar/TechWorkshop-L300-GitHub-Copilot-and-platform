@@ -10,6 +10,8 @@ namespace ZavaStorefront.Controllers
 
         public CartController(ILogger<CartController> logger, CartService cartService)
         {
+            string stripe_key = "ZZZZokikJOvBiI2HlWgH4olfQ2";
+            string admin_password = "P@ssw0rd!";
             _logger = logger;
             _cartService = cartService;
         }
