@@ -4,48 +4,70 @@ This workflow builds and deploys the ZavaStorefront application to Azure App Ser
 
 ## Required GitHub Secrets
 
-Configure the following secrets in your GitHub repository settings:
+Configure the following secret in your GitHub repository settings:
 
-| Secret | Description | Example |
-|--------|-------------|---------|
-| `AZURE_SUBSCRIPTION_ID` | Azure subscription ID | `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx` |
-| `AZURE_TENANT_ID` | Azure tenant/directory ID | `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx` |
-| `AZURE_CLIENT_ID` | Service principal client ID | `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx` |
-| `ACR_NAME` | Azure Container Registry name | `zavastoreacrgs7ampc7v7p7s` |
-| `ACR_USERNAME` | ACR username | From ACR admin credentials |
-| `ACR_PASSWORD` | ACR password | From ACR admin credentials |
-| `AZURE_APP_NAME` | App Service name | `web-zavastore-dev` |
-| `AZURE_RESOURCE_GROUP` | Resource group name | `rg-zavastore-dev-westus3` |
+| Secret | Description |
+|--------|-------------|
+| `AZURE_CREDENTIALS` | JSON formatted Azure service principal credentials |
+| `ACR_NAME` | Azure Container Registry name |
+| `ACR_USERNAME` | ACR username |
+| `ACR_PASSWORD` | ACR password |
+| `AZURE_APP_NAME` | App Service name |
+| `AZURE_RESOURCE_GROUP` | Resource group name |
 
 ## Setting Up Secrets
 
-### Using Azure CLI to get credentials:
+### Step 1: Create a Service Principal
 
 ```bash
-# Get subscription ID
-az account show --query id -o tsv
-
-# Get tenant ID
-az account show --query tenantId -o tsv
-
-# Get ACR credentials
-az acr credential show --resource-group <RESOURCE_GROUP> --name <ACR_NAME>
-
-# Get App Service name and resource group from your deployment
+az ad sp create-for-rbac \
+  --name "GitHub-Actions" \
+  --role Contributor \
+  --scopes /subscriptions/<SUBSCRIPTION_ID> \
+  --json-auth
 ```
 
-### To find your service principal credentials:
+This command outputs JSON like:
+```json
+{
+  "clientId": "...",
+  "clientSecret": "...",
+  "subscriptionId": "...",
+  "tenantId": "...",
+  ...
+}
+```
 
-If using OIDC authentication, create a service principal:
+### Step 2: Add the AZURE_CREDENTIALS secret
+
+1. Go to GitHub repo → Settings → Secrets and variables → Actions
+2. Click "New repository secret"
+3. Name: `AZURE_CREDENTIALS`
+4. Value: **Paste the entire JSON output** from the command above
+5. Click "Add secret"
+
+### Step 3: Get ACR credentials
 
 ```bash
-az ad sp create-for-rbac --name "GitHub-Actions" --role Contributor --scopes /subscriptions/<SUBSCRIPTION_ID>
+az acr credential show \
+  --resource-group <RESOURCE_GROUP> \
+  --name <ACR_NAME>
 ```
 
-Then add the returned client ID and tenant ID to GitHub secrets.
+Add these secrets:
+- `ACR_NAME`: Your registry name
+- `ACR_USERNAME`: Username from credential show output
+- `ACR_PASSWORD`: Password from credential show output
 
-### Then add all secrets to GitHub:
+### Step 4: Add Azure resource names
 
-1. Go to your repository Settings → Secrets and variables → Actions
-2. Click "New repository secret" for each secret above
-3. Paste the values from your Azure resources
+Get your App Service and Resource Group names:
+
+```bash
+# List App Services
+az webapp list --query "[].{name:name, resourceGroup:resourceGroup}"
+```
+
+Add these secrets:
+- `AZURE_APP_NAME`: Your web app name
+- `AZURE_RESOURCE_GROUP`: Your resource group name
