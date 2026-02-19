@@ -29,8 +29,8 @@ jobs:
           az acr build \
             --registry ${{ secrets.ACR_NAME }} \
             --image ${{ env.REPOSITORY }}:${{ env.TAG }} \
-            --file Dockerfile \
-            ./src
+            --file src/Dockerfile \
+            .
 
       - name: Deploy to App Service
         run: |
