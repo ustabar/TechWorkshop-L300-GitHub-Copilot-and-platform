@@ -39,5 +39,5 @@ jobs:
             --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
             --docker-custom-image-name ${{ env.REGISTRY }}/${{ env.REPOSITORY }}:${{ env.TAG }} \
             --docker-registry-server-url https://${{ env.REGISTRY }} \
-            --docker-registry-server-username ${{ secrets.ACR_USERNAME }} \
+            --docker-registry-server-user ${{ secrets.ACR_USERNAME }} \
             --docker-registry-server-password ${{ secrets.ACR_PASSWORD }}
