@@ -1,0 +1,157 @@
+@{
+    ViewData["Title"] = "Chat with Phi4";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <h1 class="mb-4">Chat with Microsoft Phi4</h1>
+            
+            <div class="card">
+                <div class="card-body">
+                    <!-- Chat Response Area -->
+                    <div class="mb-3">
+                        <label for="responseArea" class="form-label">Response</label>
+                        <textarea class="form-control" id="responseArea" rows="10" readonly placeholder="Chat responses will appear here..."></textarea>
+                    </div>
+
+                    <!-- Loading Indicator -->
+                    <div id="loadingIndicator" class="alert alert-info d-none" role="alert">
+                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        <span>Waiting for response from Phi4...</span>
+                    </div>
+
+                    <!-- Error Messages -->
+                    <div id="errorAlert" class="alert alert-danger d-none" role="alert"></div>
+
+                    <!-- Chat Input Form -->
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="messageInput" placeholder="Type your message here..." />
+                        <button class="btn btn-primary" type="button" id="sendButton">Send</button>
+                    </div>
+
+                    <!-- History -->
+                    <div class="mt-4">
+                        <h5>Conversation History</h5>
+                        <div id="historyContainer" class="bg-light p-3 rounded" style="max-height: 300px; overflow-y: auto; min-height: 100px;">
+                            <p class="text-muted">No messages yet. Start a conversation!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
+        const responseArea = document.getElementById('responseArea');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const errorAlert = document.getElementById('errorAlert');
+        const historyContainer = document.getElementById('historyContainer');
+        let conversationHistory = [];
+
+        sendButton.addEventListener('click', sendMessage);
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        async function sendMessage() {
+            const message = messageInput.value.trim();
+            
+            if (!message) {
+                showError('Please enter a message.');
+                return;
+            }
+
+            // Clear previous errors
+            hideError();
+            messageInput.value = '';
+            
+            // Show loading indicator
+            loadingIndicator.classList.remove('d-none');
+            sendButton.disabled = true;
+
+            try {
+                const response = await fetch('/Chat/SendMessage', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `message=${encodeURIComponent(message)}`
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                if (data.success) {
+                    responseArea.value = data.response;
+                    
+                    // Add to conversation history
+                    conversationHistory.push({
+                        type: 'user',
+                        text: message
+                    });
+                    conversationHistory.push({
+                        type: 'assistant',
+                        text: data.response
+                    });
+                    
+                    updateHistoryDisplay();
+                } else {
+                    showError(data.error || 'An error occurred while processing your message.');
+                }
+            } catch (error) {
+                showError(`Error: ${error.message}`);
+            } finally {
+                loadingIndicator.classList.add('d-none');
+                sendButton.disabled = false;
+                messageInput.focus();
+            }
+        }
+
+        function updateHistoryDisplay() {
+            if (conversationHistory.length === 0) {
+                historyContainer.innerHTML = '<p class="text-muted">No messages yet. Start a conversation!</p>';
+                return;
+            }
+
+            historyContainer.innerHTML = conversationHistory.map((item, index) => `
+                <div class="mb-2">
+                    <strong>${item.type === 'user' ? 'You' : 'Phi4'}:</strong>
+                    <p class="ms-3 mb-2">${escapeHtml(item.text)}</p>
+                </div>
+            `).join('');
+        }
+
+        function showError(message) {
+            errorAlert.textContent = message;
+            errorAlert.classList.remove('d-none');
+        }
+
+        function hideError() {
+            errorAlert.classList.add('d-none');
+        }
+
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+
+        // Focus on input when page loads
+        messageInput.focus();
+    </script>
+}
