@@ -1,0 +1,19 @@
+name: ZavaStorefront
+location: westus3
+resourceGroup: rg-zavastore-dev-westus3
+
+metadata:
+  template: bicep-infrastructure-template
+
+services:
+  webapp:
+    project: ./src
+    language: dotnet
+    host: appservice
+    docker:
+      path: ./src
+      build: Dockerfile
+    azure:
+      appServicePlanSku: B1
+      monitoring:
+        applicationInsights: true
